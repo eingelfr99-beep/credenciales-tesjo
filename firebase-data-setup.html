@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurador de Datos Firebase - Credenciales TESJo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin: 15px 0;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .btn {
+      background-color: #007bff;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+    }
+    .btn:hover {
+      background-color: #0056b3;
+    }
+    .btn.success {
+      background-color: #28a745;
+    }
+    .btn.warning {
+      background-color: #ffc107;
+      color: black;
+    }
+    .btn.danger {
+      background-color: #dc3545;
+    }
+    .result {
+      margin: 15px 0;
+      padding: 15px;
+      border-radius: 5px;
+      border-left: 4px solid #007bff;
+    }
+    .result.success {
+      background-color: #d4edda;
+      border-left-color: #28a745;
+    }
+    .result.error {
+      background-color: #f8d7da;
+      border-left-color: #dc3545;
+    }
+    .result.warning {
+      background-color: #fff3cd;
+      border-left-color: #ffc107;
+    }
+    .credential-preview {
+      border: 2px solid #ddd;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      background-color: #f8f9fa;
+    }
+    .credential-preview h3 {
+      margin-top: 0;
+      color: #0b1f41;
+    }
+    .field-row {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .field-row .form-group {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Configurador de Datos Firebase</h1>
+    <p>Esta herramienta te ayudará a crear y gestionar credenciales en Firebase.</p>
+    
+    <div class="result warning">
+      <strong>⚠️ Importante:</strong> Este script requiere permisos de escritura en Firestore. 
+      Asegúrate de que las reglas permitan escritura temporalmente o usa la consola de Firebase.
+    </div>
+
+    <h2>1. Crear Nueva Credencial</h2>
+    <form id="credentialForm">
+      <div class="field-row">
+        <div class="form-group">
+          <label for="matricula">Matrícula *</label>
+          <input type="text" id="matricula" required pattern="\d{13}" placeholder="2022150480341">
+        </div>
+        <div class="form-group">
+          <label for="nombre">Nombre Completo *</label>
+          <input type="text" id="nombre" required placeholder="Angel Flores Rivero">
+        </div>
+      </div>
+      
+      <div class="field-row">
+        <div class="form-group">
+          <label for="carrera">Carrera *</label>
+          <select id="carrera" required>
+            <option value="">Selecciona una carrera</option>
+            <option value="Ingeniería en Sistemas">Ingeniería en Sistemas</option>
+            <option value="Ingeniería Industrial">Ingeniería Industrial</option>
+            <option value="Ingeniería Mecatrónica">Ingeniería Mecatrónica</option>
+            <option value="Ingeniería Química">Ingeniería Química</option>
+            <option value="Licenciatura en Administración">Licenciatura en Administración</option>
+            <option value="Licenciatura en Contaduría">Licenciatura en Contaduría</option>
+            <option value="Licenciatura en Informática">Licenciatura en Informática</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="vigencia">Vigencia *</label>
+          <input type="text" id="vigencia" required placeholder="Agosto 2025">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="foto">URL de la Foto</label>
+        <input type="url" id="foto" placeholder="https://ejemplo.com/foto.jpg">
+      </div>
+      
+      <div class="form-group">
+        <label for="estado">Estado</label>
+        <select id="estado">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+          <option value="suspendido">Suspendido</option>
+        </select>
+      </div>
+      
+      <button type="submit" class="btn success">Crear Credencial</button>
+      <button type="button" class="btn warning" onclick="previewCredential()">Vista Previa</button>
+    </form>
+
+    <div id="preview" class="credential-preview" style="display: none;">
+      <h3>Vista Previa de la Credencial</h3>
+      <div id="previewContent"></div>
+    </div>
+
+    <div id="result"></div>
+
+    <h2>2. Datos de Prueba Predefinidos</h2>
+    <p>Crear credenciales de prueba automáticamente:</p>
+    <button class="btn warning" onclick="createTestData()">Crear Datos de Prueba</button>
+    
+    <h2>3. Verificar Credenciales Existentes</h2>
+    <div class="field-row">
+      <div class="form-group">
+        <label for="searchMatricula">Buscar Matrícula</label>
+        <input type="text" id="searchMatricula" placeholder="2022150480341">
+      </div>
+      <div class="form-group">
+        <button class="btn" onclick="searchCredential()">Buscar</button>
+      </div>
+    </div>
+    <div id="searchResult"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAm-EoR6XKc3t86LGomNDbf2fBnEwmqwlk",
+      authDomain: "credenciales-tesjo-322a8.firebaseapp.com",
+      projectId: "credenciales-tesjo-322a8",
+      storageBucket: "credenciales-tesjo-322a8.appspot.com",
+      messagingSenderId: "153098875443",
+      appId: "1:153098875443:web:53d5f6d1b54339aa5fa946"
+    };
+
+    let app, db;
+
+    try {
+      app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      console.log("Firebase inicializado para configuración de datos");
+    } catch (error) {
+      console.error("Error inicializando Firebase:", error);
+    }
+
+    function showResult(message, type = 'info') {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+    }
+
+    function getFormData() {
+      return {
+        matricula: document.getElementById('matricula').value.trim(),
+        nombre: document.getElementById('nombre').value.trim(),
+        carrera: document.getElementById('carrera').value,
+        vigencia: document.getElementById('vigencia').value.trim(),
+        foto: document.getElementById('foto').value.trim() || 'https://via.placeholder.com/150x150/0b1f41/ffffff?text=' + document.getElementById('nombre').value.substring(0, 2).toUpperCase(),
+        estado: document.getElementById('estado').value,
+        fechaCreacion: new Date().toISOString(),
+        ultimaActualizacion: new Date().toISOString()
+      };
+    }
+
+    window.previewCredential = function() {
+      const data = getFormData();
+      const previewDiv = document.getElementById('preview');
+      const previewContent = document.getElementById('previewContent');
+      
+      if (!data.nombre || !data.carrera || !data.vigencia) {
+        showResult('Completa los campos obligatorios para ver la vista previa', 'warning');
+        return;
+      }
+
+      previewContent.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+          <img src="./logo.png" style="width: 50px; height: 50px; border-radius: 5px;" onerror="this.style.display='none'">
+          <img src="${data.foto}" style="width: 80px; height: 80px; border-radius: 10px; object-fit: cover;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjQwIiBjeT0iMzIiIHI9IjEyIiBmaWxsPSIjOUI5QkEwIi8+CjxwYXRoIGQ9Ik0xNiA5NkMxNiA4MCAyNCA3MiA0MCA3MkM1NiA3MiA2NCA4MCA2NCA5NkgxNloiIGZpbGw9IiM5QjlBQTAiLz4KPC9zdmc+Cg=='">
+        </div>
+        <h4>${data.nombre}</h4>
+        <p><strong>Matrícula:</strong> ${data.matricula || 'N/A'}</p>
+        <p><strong>Carrera:</strong> ${data.carrera}</p>
+        <p><strong>Vigencia:</strong> ${data.vigencia}</p>
+        <p><strong>Estado:</strong> ${data.estado}</p>
+      `;
+      
+      previewDiv.style.display = 'block';
+    };
+
+    window.createTestData = async function() {
+      if (!db) {
+        showResult('Firebase no está inicializado', 'error');
+        return;
+      }
+
+      const testData = [
+        {
+          matricula: "2022150480341",
+          nombre: "Angel Flores Rivero",
+          carrera: "Ingeniería en Sistemas",
+          vigencia: "Agosto 2025",
+          foto: "https://via.placeholder.com/150x150/0b1f41/ffffff?text=AF",
+          estado: "activo"
+        },
+        {
+          matricula: "2022150480342",
+          nombre: "María González López",
+          carrera: "Ingeniería Industrial",
+          vigencia: "Diciembre 2024",
+          foto: "https://via.placeholder.com/150x150/cc0000/ffffff?text=MG",
+          estado: "activo"
+        },
+        {
+          matricula: "2022150480343",
+          nombre: "Carlos Rodríguez Pérez",
+          carrera: "Ingeniería Mecatrónica",
+          vigencia: "Junio 2025",
+          foto: "https://via.placeholder.com/150x150/16226c/ffffff?text=CR",
+          estado: "activo"
+        }
+      ];
+
+      try {
+        showResult('Creando datos de prueba...', 'warning');
+        
+        for (const data of testData) {
+          const docRef = doc(db, "credenciales", data.matricula);
+          await setDoc(docRef, {
+            ...data,
+            fechaCreacion: new Date().toISOString(),
+            ultimaActualizacion: new Date().toISOString()
+          });
+        }
+        
+        showResult(`✅ Se crearon ${testData.length} credenciales de prueba exitosamente`, 'success');
+        
+      } catch (error) {
+        showResult(`❌ Error creando datos de prueba: ${error.message}`, 'error');
+      }
+    };
+
+    window.searchCredential = async function() {
+      if (!db) {
+        showResult('Firebase no está inicializado', 'error');
+        return;
+      }
+
+      const matricula = document.getElementById('searchMatricula').value.trim();
+      if (!matricula) {
+        showResult('Ingresa una matrícula para buscar', 'warning');
+        return;
+      }
+
+      try {
+        showResult('Buscando credencial...', 'warning');
+        
+        const docRef = doc(db, "credenciales", matricula);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const datos = docSnap.data();
+          document.getElementById('searchResult').innerHTML = `
+            <div class="result success">
+              <h4>✅ Credencial Encontrada</h4>
+              <pre>${JSON.stringify(datos, null, 2)}</pre>
+            </div>
+          `;
+        } else {
+          document.getElementById('searchResult').innerHTML = `
+            <div class="result warning">
+              <h4>⚠️ Credencial No Encontrada</h4>
+              <p>No se encontró ninguna credencial con la matrícula: ${matricula}</p>
+            </div>
+          `;
+        }
+        
+      } catch (error) {
+        showResult(`❌ Error buscando credencial: ${error.message}`, 'error');
+      }
+    };
+
+    // Manejar el formulario
+    document.getElementById('credentialForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (!db) {
+        showResult('Firebase no está inicializado', 'error');
+        return;
+      }
+
+      const data = getFormData();
+      
+      if (!data.matricula || !data.nombre || !data.carrera || !data.vigencia) {
+        showResult('Completa todos los campos obligatorios', 'warning');
+        return;
+      }
+
+      try {
+        showResult('Creando credencial...', 'warning');
+        
+        const docRef = doc(db, "credenciales", data.matricula);
+        await setDoc(docRef, data);
+        
+        showResult(`✅ Credencial creada exitosamente para ${data.nombre}`, 'success');
+        
+        // Limpiar formulario
+        document.getElementById('credentialForm').reset();
+        document.getElementById('preview').style.display = 'none';
+        
+      } catch (error) {
+        showResult(`❌ Error creando credencial: ${error.message}`, 'error');
+      }
+    });
+  </script>
+</body>
+</html> 

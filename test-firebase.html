@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Firebase - Credenciales TESJo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+  </style>
+</head>
+<body>
+  <h1>Test de Conexión Firebase</h1>
+  <div id="results"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const resultsDiv = document.getElementById("results");
+
+    function addResult(message, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `test-result ${type}`;
+      div.textContent = message;
+      resultsDiv.appendChild(div);
+    }
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAm-EoR6XKc3t86LGomNDbf2fBnEwmqwlk",
+      authDomain: "credenciales-tesjo-322a8.firebaseapp.com",
+      projectId: "credenciales-tesjo-322a8",
+      storageBucket: "credenciales-tesjo-322a8.appspot.com",
+      messagingSenderId: "153098875443",
+      appId: "1:153098875443:web:53d5f6d1b54339aa5fa946"
+    };
+
+    try {
+      addResult("Iniciando prueba de conexión...", "info");
+      
+      // Inicializar Firebase
+      const app = initializeApp(firebaseConfig);
+      addResult("✅ Firebase inicializado correctamente", "success");
+      
+      const db = getFirestore(app);
+      addResult("✅ Firestore inicializado correctamente", "success");
+      
+      // Probar conexión con un documento
+      const testMatricula = "2022150480341";
+      addResult(`Probando búsqueda de matrícula: ${testMatricula}`, "info");
+      
+      const docRef = doc(db, "credenciales", testMatricula);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const datos = docSnap.data();
+        addResult("✅ Documento encontrado en Firestore", "success");
+        addResult(`Datos: ${JSON.stringify(datos, null, 2)}`, "info");
+      } else {
+        addResult("⚠️ Documento no encontrado en Firestore", "error");
+        addResult("Esto puede indicar que:", "info");
+        addResult("1. La colección 'credenciales' no existe", "info");
+        addResult("2. El documento con esa matrícula no existe", "info");
+        addResult("3. Las reglas de Firestore no permiten lectura", "info");
+      }
+      
+    } catch (error) {
+      addResult(`❌ Error: ${error.message}`, "error");
+      addResult(`Stack: ${error.stack}`, "error");
+    }
+  </script>
+</body>
+</html> 

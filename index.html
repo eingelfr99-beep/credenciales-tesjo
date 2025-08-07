@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Credencial Electrónica - universidad-tesjo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="./lobos-tesjo.png">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">
+      <img src="./1.png" alt="Logo universidad" width="32" height="32">
+      <span>Credenciales-Tesjo</span>
+    </div>
+    <nav class="menu">
+      <a href="#">Inicio</a>
+      <a href="#">Verificar</a>
+      <a href="#">Contacto</a>
+    </nav>
+  </header>
+
+  <main class="contenedor">
+    <h1>Consulta tu Credencial Electrónica</h1>
+    <div class="buscador">
+      <input type="text" id="matricula" placeholder="Ingresa tu matrícula">
+      <button onclick="buscarCredencial()">Buscar</button>
+    </div>
+    <div id="credencial"></div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    async function buscarCredencial() {
+      const matricula = document.getElementById("matricula").value.trim();
+      const contenedor = document.getElementById("credencial");
+      contenedor.innerHTML = "Buscando...";
+
+      try {
+        const response = await fetch(`buscar_credencial.php?matricula=${matricula}`);
+        const data = await response.json();
+
+        if (data.error) {
+          contenedor.innerHTML = "<p>No se encontró ninguna credencial con esa matrícula.</p>";
+        } else {
+          contenedor.innerHTML = `
+            <div class="credencial animate">
+              <div class="foto-con-logo">
+                <img src="tesjo-logo.png" class="logo-credencial" alt="Logo Tesjo">
+                <img src="fotos/${data.nombre_foto}" class="foto" alt="Foto del estudiante">
+              </div>
+              <div class="datos">
+                <h2>${data.nombre}</h2>
+                <p><strong>Matrícula:</strong> ${data.matricula}</p>
+                <p><strong>Carrera:</strong> ${data.carrera}</p>
+                <p><strong>Vigencia:</strong> ${data.vigencia}</p>
+                <div id="qrcode"></div>
+              </div>
+            </div>
+          `;
+          new QRCode(document.getElementById("qrcode"), `https://universidad-tesjo.edu/validar?matricula=${matricula}`);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        contenedor.innerHTML = "<p>Error al buscar la credencial.</p>";
+      }
+    }
+  </script>
+</body>
+</html>
